@@ -1,6 +1,6 @@
 import re
 def read_2():
-    f = open('./data/poem', 'r', encoding='utf-8')
+    f = open('../data/poem', 'r', encoding='utf-8')
 
     while True:
         line = f.readline()
@@ -12,7 +12,7 @@ def read_2():
     f.close()
 
 def read_3():
-    f = open('./data/poem', 'r', encoding='utf-8')
+    f = open('../data/poem', 'r', encoding='utf-8')
 
     lines = []
     for line in f:
@@ -23,7 +23,7 @@ def read_3():
     return lines
 
 def read_4():
-    with open("./data/poem", 'r', encoding='utf-8') as f:        # with을 쓰면 끝에 : 붙여야함 f는 변수
+    with open("../data/poem", 'r', encoding='utf-8') as f:        # with을 쓰면 끝에 : 붙여야함 f는 변수
         for line in f:
             line.strip()
 
@@ -51,7 +51,7 @@ for line in lines:
     count += len(words)
 
 def write():
-    f = open('./data/sample.txt', 'w', encoding='utf-8')
+    f = open('../data/sample.txt', 'w', encoding='utf-8')
 
     f.write('hello\n')
     f.write('python')
