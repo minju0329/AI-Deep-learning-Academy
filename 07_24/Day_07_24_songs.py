@@ -9,6 +9,14 @@ payload = { 'S_PAGENUMBER': 1,
             'sort_field': 'SORT_PBCTN_DAY',
 }
 
+def get_songs(code, page):
+    payload = {
+        'S_PAGENUMBER': page,       # 1
+        'S_MB_CD': code,            # 'W0726200'
+        'S_HNAB_GBN': 'I',
+        'hanmb_nm': '권지용',
+        'sort_field': 'SORT_PBCTN_DAY',
+    }
 # 문제
 # 찾아놓은 지드래곤 페이지로부터 데이터를 가져오세요
 
@@ -36,8 +44,26 @@ tbody = re.findall(r'<tbody>(.+?)</tbody>',received, re.DOTALL)
 # print(len(tbody))
 # print(tbody[1])
 
-trs = re.findall(r'<tr>(.+?)</tr>',tbody[1],re.DOTALL)
+tbody_text = tbody[1]
+# imgs = re.findall(r'<img .+? />',tbody_text)
+# print(len(imgs))
+
+tbody_text = re.sub(r' <img .+? />', '', tbody_text)
+
+trs = re.findall(r'<tr>(.+?)</tr>',tbody_text,re.DOTALL)
+
+if not trs:
+    False
+
 
 for tr in trs:
+    tr = re.sub(r'<br/>', '',tr)
     tds = re.findall(r'<td>(.+)</td>',tr)
-    print(tds)
+    tbs = [td.strip() for td in tds]
+    tds[0] = tds[0].strip()
+    #print(tds)
+
+page = 1
+while get_songs('W0726200', page):
+    print('-'*50, page)
+    page +=1
