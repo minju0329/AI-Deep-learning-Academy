@@ -2,7 +2,6 @@
 # cars.csv 파일을 학습해서 속도가 30과 50일 때의 제동 거리를 구하세요
 
 import tensorflow as tf
-import csv
 import pandas as pd
 
 def read_csv_():
