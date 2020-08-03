@@ -66,7 +66,6 @@ def logistic_regression_iris():
     data = model_selection.train_test_split(x,y, train_size=0.7)
     x_train, x_test, y_train, y_test = data
 
-#   (150,1)
     w = tf.Variable(tf.random_uniform([x.shape[0], 1]))
     ph_x = tf.placeholder(tf.float32)
 

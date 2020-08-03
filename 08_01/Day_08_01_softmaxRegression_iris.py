@@ -3,73 +3,113 @@ import numpy as np
 import tensorflow as tf
 from sklearn import datasets, svm, model_selection, preprocessing
 
+
+def show_accuracy(preds, labels):
+    preds_arg = np.argmax(preds, axis=1)
+    y_arg = np.argmax(labels, axis=1)
+
+    equals = (preds_arg == y_arg)
+    print('acc :', np.mean(equals))
+
+def show_accuracy_sparse(preds, labels):
+    preds_arg = np.argmax(preds, axis=1)
+
+    equals = (preds_arg == labels)
+    print('acc :', np.mean(equals))
+
 # 문제 1
 # 붓꽃 데이터 파일을 읽어오세요
+def softmax_iris():
+    file = pd.read_csv('../data/iris(150).csv', index_col=0)
 
-file = pd.read_csv('../data/iris(150).csv', index_col=0)
+    enc = preprocessing.LabelBinarizer()  # 0과 1로만 표기
+    y = enc.fit_transform(file.Species)
 
-# 문제 2
-# x, y를 만드세요 (y는 인코딩)
+    file.drop(['Species'], axis=1, inplace=True)   # 내가 가진 파일의 Species열이 삭제된다
+    x = file.values
+    x = np.float32(x)
 
-# data = file.values
-# le  = preprocessing.LabelEncoder()
-# le.fit(file.Species)
-# x = data[:,:-1]
-# y = le.transform(file.Species)
+    data = model_selection.train_test_split(x,y, train_size=0.7)
+    x_train, x_test, y_train, y_test = data
 
-# answer 2-1
-enc = preprocessing.LabelBinarizer()
-y = enc.fit_transform(file.Species)
-# print(y[:5]) # 150행 5열 만 출력
+    n_features = x.shape[1]
+    n_classed = y.shape[1]
+    w = tf.Variable(tf.random_uniform([n_features, n_classed]))
 
-# df = file.values[:, :-1]
-# file.dropna(['Species'])   # na가 붙으면 결측치를 없앰
-# x = df.values
-# print(x.shape)
-# print(x[:3])
+    ph_x = tf.placeholder(tf.float32)
 
-# answer 2-2 원본을 바꾸는 코드
-file.drop(['Species'], axis=1, inplace=True)
-x = file.values
-# print(x[:3])
+    z = tf.matmul(ph_x, w)
+    hx = tf.nn.softmax(z)
 
-# 문제 3
-# 7대 3으로 나눠서 정확도를 구하시오
-x = np.float32(x) # [150,4]
-y = np.float32(y) # [150,3]
+    loss_i = tf.nn.softmax_cross_entropy_with_logits(labels=y_train, logits=z)
+    loss = tf.reduce_mean(loss_i)
 
-data = model_selection.train_test_split(x, y, train_size=0.7)
-x_train, x_test, y_train, y_test = data
+    optimizer = tf.train.GradientDescentOptimizer(0.1)
+    train = optimizer.minimize(loss)
 
-w = tf.Variable(tf.random_uniform([x.shape[1], 1]))  # 8
-b = tf.Variable(tf.random_uniform([1]))
+    sess = tf.Session()
+    sess.run(tf.global_variables_initializer())
 
-ph_x = tf.placeholder(tf.float32)
+    for i in range(1000):
+        sess.run(train, {ph_x:x_train})
+        print(i, sess.run(loss, {ph_x:x_train}))
 
-z = tf.matmul(ph_x, w) + b
-hx = tf.matmul(ph_x, w)
 
-loss_i = tf.nn.sigmoid_cross_entropy_with_logits(labels=y_train, logits=z)
-loss = tf.reduce_mean(loss_i)
+    # 문제 4
+    # 30%의 데이터에 대해 정확도를 구하시오
+    preds_train = sess.run(hx, {ph_x: x_train})
+    preds_test = sess.run(hx, {ph_x: x_test})
 
-optimizer = tf.train.GradientDescentOptimizer(0.0001)
-train = optimizer.minimize(loss)
+    show_accuracy(preds_train, y_train)
+    show_accuracy(preds_test, y_test)
+    sess.close()
 
-sess = tf.Session()
-sess.run(tf.global_variables_initializer())
+def softmax_iris_sparse():
+    file = pd.read_csv('../data/iris(150).csv', index_col=0)
 
-for i in range(100):
-    sess.run(train, {ph_x: x_train})
+    enc = preprocessing.LabelEncoder()  # 0과 1로만 표기
+    y = enc.fit_transform(file.Species)
 
-    if i % 10 == 0:
+    file.drop(['Species'], axis=1, inplace=True)  # 내가 가진 파일의 Species열이 삭제된다
+    x = file.values
+    x = np.float32(x)
+
+    data = model_selection.train_test_split(x, y, train_size=0.7)
+    x_train, x_test, y_train, y_test = data
+    print(y_train.shape, x_train.shape) #(105,)(45,)
+
+    n_features = x.shape[1]
+    n_classed = 3
+    w = tf.Variable(tf.random_uniform([n_features, n_classed]))
+    b = tf.Variable(tf.random_uniform([n_features, n_classed]))         # class의 개수가 bias의 갯수이다.
+
+    ph_x = tf.placeholder(tf.float32)
+
+    z = tf.matmul(ph_x, w)+b
+    hx = tf.nn.softmax(z)
+
+    loss_i = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=y_train, logits=z)
+    loss = tf.reduce_mean(loss_i)
+
+    optimizer = tf.train.GradientDescentOptimizer(0.1)
+    train = optimizer.minimize(loss)
+
+    sess = tf.Session()
+    sess.run(tf.global_variables_initializer())
+
+    for i in range(1000):
+        sess.run(train, {ph_x: x_train})
         print(i, sess.run(loss, {ph_x: x_train}))
 
-preds = sess.run(hx, {ph_x: x_test})
-preds_1 = (preds.reshape(-1) > 0.5)
-y_1 = y_test.reshape(-1)
+    # # 문제 4
+    # # 30%의 데이터에 대해 정확도를 구하시오
+    preds_train = sess.run(hx, {ph_x: x_train})
+    preds_test = sess.run(hx, {ph_x: x_test})
 
-preds_1 = np.int32(preds_1)
-y_1 = np.int32(y_1)
+    show_accuracy_sparse(preds_train, y_train)
+    show_accuracy_sparse(preds_test, y_test)
 
-print('acc :', np.mean(preds_1 == y_1))
-sess.close()
+    sess.close()
+
+softmax_iris()
+#softmax_iris_sparse()
