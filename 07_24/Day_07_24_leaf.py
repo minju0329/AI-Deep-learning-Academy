@@ -30,5 +30,12 @@ print(x.shape, y.shape)
 print(y[:5])
 
 data = model_selection.train_test_split(x,y,train_size=0.7)
-x_train, x_test, y_train, t_test = data
+x_train, x_test, y_train, y_test = data
 
+clf = svm.SVC()
+clf.fit(x_train, y_train)
+
+# 5. 예측해서 정확도 계산하기
+y_hats = clf.predict(x_test)
+equals = (y_hats == y_test)
+print('acc :', np.mean(equals))
